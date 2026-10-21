@@ -1,0 +1,5 @@
+# Large raw downloads (re-create with notebooks/01_get_sokuluk_boundary.ipynb)
+data/raw/
+.ipynb_checkpoints/
+__pycache__/
+.DS_Store
