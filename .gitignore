@@ -6,7 +6,8 @@ __pycache__/
 
 # Video & music production (local only)
 reports/video/
-scripts/make_video.py
+scripts/make_video*.py
+scripts/vidlib.py
 scripts/make_music.py
 scripts/timeline.py
 docs/video_*.md
