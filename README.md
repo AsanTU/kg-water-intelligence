@@ -116,7 +116,7 @@ Collect ERA5-Land weather and soil-water data and SoilGrids soil properties for 
 ## Day 2 — Historical weather for Sokuluk
 
 **Data:** ERA5-Land hourly reanalysis (Copernicus Climate Data Store, ECMWF), ~9 km grid, downloaded for the box 42.4–43.3 °N, 74.0–74.7 °E.
-**Period:** 1 Apr 2023 – 31 Dec 2024 (641 days, no gaps). Longer history (2018–2022) is not downloaded yet.
+**Period:** 2 Jan 2018 – 31 Dec 2024 (**2,556 days, no gaps, no missing values**; 1 Jan 2018 is dropped because the first local day is incomplete).
 **Output:** `data/processed/sokuluk_weather_daily.csv`
 
 | Column | Meaning | Unit |
@@ -127,7 +127,7 @@ Collect ERA5-Land weather and soil-water data and SoilGrids soil properties for 
 | `soil_moisture_l1_m3m3` / `_l2_m3m3` | volumetric soil water, layer 1 (0–7 cm) and layer 2 (7–28 cm), daily mean | m³/m³ |
 
 ### Processing (`scripts/download_era5land.py`, `scripts/process_era5land.py`)
-1. One CDS request per month (a full year exceeds the request-size limit); 2 m temperature, total precipitation, soil water layers 1–2.
+1. One CDS request per month (a full year exceeds the request-size limit); 2 m temperature, total precipitation, soil water layers 1–2. 84 monthly files, ~36 MB in `data/raw/era5land/` (not in git).
 2. K → °C; m → mm. ERA5-Land precipitation is an accumulation that resets at 00 UTC, so it is converted to hourly amounts (negatives clipped to 0) and summed per local day.
 3. The 36 grid cells that contain cropland are averaged **weighted by the cropland area in each cell** (from the Day 1 mask, 855 km² in total), so the series describes the weather over the farmland, not the mountains.
 4. A day is kept only if all 24 hours are present. Checked: no missing values, no date gaps.
@@ -136,18 +136,28 @@ Collect ERA5-Land weather and soil-water data and SoilGrids soil properties for 
 ![Temperature](reports/figures/sokuluk_temperature.png)
 ![Precipitation](reports/figures/sokuluk_precipitation.png)
 
-- Strong seasonal cycle: daily mean from about −20 °C (Dec 2023) to about 31 °C (Jul 2023); hottest day 38 °C (13 Jul 2023).
-- Growing season (Apr–Oct) 2023 was **drier and hotter** than 2024: ~290 mm vs ~467 mm of rain, and 18 vs 7 days with a maximum ≥ 35 °C.
-- Five **dry spells** (≥ 14 days under 1 mm, Apr–Oct) — listed in `reports/dry_spells.csv`: May and Jun 2023, Jul–Aug 2023, late May–Jun 2024, Jul–Aug 2024.
+| Year | Mean temp °C | Days max ≥ 35 °C | Precipitation, year (mm) | Precipitation, Apr–Oct (mm) |
+|---|---|---|---|---|
+| 2018 | 10.3 | 7 | 642 | 323 |
+| 2019 | 11.5 | 21 | 703 | 418 |
+| 2020 | 10.4 | 1 | 595 | 389 |
+| 2021 | 11.1 | 9 | 567 | **253** |
+| 2022 | 11.7 | 9 | 746 | 342 |
+| 2023 | 11.9 | 18 | 592 | 290 |
+| 2024 | 10.9 | 7 | 756 | 467 |
+
+- Strong seasonal cycle: daily mean from about −20 °C in winter to about 31 °C in July; hottest day 38 °C (19 Jul 2019), coldest daily minimum −25 °C (13 Dec 2023). 72 days reached 35 °C, most of them in 2019 (21) and 2023 (18).
+- **2021 was the driest growing season** (253 mm Apr–Oct), **2024 the wettest** (467 mm); 2019 and 2023 were the hottest.
+- 16 **dry spells** (≥ 14 days under 1 mm, Apr–Oct) in `reports/dry_spells.csv`; the longest is 36 days, 9 Jul – 13 Aug 2019. Every year except 2021 has at least one in May–Aug.
 
 ### What this data can and cannot tell us about water stress
-**Can:** show when it was hot and dry, how long dry spells lasted, and roughly how wet the top soil was — the weather side of water stress, with daily resolution.
+**Can:** show when it was hot and dry, how long dry spells lasted, and roughly how wet the top soil was — the weather side of water stress, at daily resolution and over seven seasons.
 
 **Cannot:**
 - Tell whether a *specific field* needs water. ERA5-Land cells are ~9 km wide, so one number covers many fields, crops and irrigation schedules.
 - See **irrigation**. Much of Chüy's cropland is irrigated from canals, so a dry spell does not mean dry fields. This is the biggest gap.
 - Measure the plant itself. Crop stress needs satellite vegetation data (Day 3, Sentinel-2 NDVI) and a way to validate it.
-- Be treated as station-quality. It is a model product: temperature mixes valley and foothill elevations, and ERA5-Land precipitation can have biases in mountain regions — the 2024 total (~756 mm) looks high for the Chüy plain and should be checked against weather-station data before it is used quantitatively.
+- Be treated as station-quality. It is a model product: temperature mixes valley and foothill elevations. Precipitation looks **high**: the 7-year mean is ~658 mm/year (567–756), which is more than I would expect for the Chüy plain, so ERA5-Land probably over-estimates rain here. Use it for *relative* comparisons (wetter vs drier years and spells) and check it against weather-station data before using absolute amounts.
 
 ### Next
-Day 3: Sentinel-2 vegetation (NDVI) over the cropland mask. Later: align weather, vegetation and cropland in space and time, then define a defensible water-stress indicator before any model.
+Day 3: Sentinel-2 vegetation (NDVI) over the cropland mask (`scripts/ndvi_sentinel2.py`, in progress). Later: align weather, vegetation and cropland in space and time, then define a defensible water-stress indicator before any model.

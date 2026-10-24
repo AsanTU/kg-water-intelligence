@@ -27,7 +27,7 @@ def style(ax, title, sub):
     for s in ("top", "right", "left"): ax.spines[s].set_visible(False)
     ax.spines["bottom"].set_color(GRID); ax.tick_params(colors=INK2, length=0, labelsize=10)
     ax.grid(axis="y", color=GRID, lw=.8); ax.set_axisbelow(True)
-    ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1, 4, 7, 10])); ax.xaxis.set_major_formatter(mdates.DateFormatter("%b\n%Y"))
+    ax.xaxis.set_major_locator(mdates.MonthLocator(bymonth=[1, 7])); ax.xaxis.set_major_formatter(mdates.DateFormatter("%b\n%Y"))
     ax.figure.text(.055, .93, title, fontsize=16, fontweight="bold", color=INK, ha="left")
     ax.figure.text(.055, .875, sub, fontsize=10.5, color=INK2, ha="left")
 
@@ -44,15 +44,27 @@ ax.annotate(f"coldest: {str(round(d.temperature_2m_min_c[cold])).replace('-', '�
 ax.text(d.index[0], .6, "0 °C", color=MUTED, fontsize=9, va="bottom")
 fig.savefig("reports/figures/sokuluk_temperature.png", dpi=200); plt.close(fig)
 
-# ---- precipitation + dry spells
-fig, ax = plt.subplots(figsize=(12, 5.4)); fig.subplots_adjust(left=.055, right=.975, top=.80, bottom=.14)
-for s, e, n in spells: ax.axvspan(s - pd.Timedelta(hours=12), e + pd.Timedelta(hours=12), color=SPELL, alpha=.75, lw=0, zorder=0)
-ax.bar(d.index, d.precipitation_mm, width=1.0, color=RAIN, lw=0, zorder=2)
-style(ax, "Sokuluk cropland: daily precipitation", f"Precipitation in mm per day, ERA5-Land, cropland-weighted · {span} · grey = dry spell: ≥ {MIN_DAYS} days under {DRY_MM:g} mm, Apr–Oct (d = days)")
-ymax = d.precipitation_mm.max() * 1.12; ax.set_ylim(0, ymax)
-for s, e, n in spells:
-    ax.text(s + (e - s) / 2, ymax * .97, f"{n} d", ha="center", va="top", fontsize=9.5, color=INK, zorder=3)
-wet = d.precipitation_mm.idxmax()
-ax.annotate(f"wettest day: {d.precipitation_mm[wet]:.0f} mm ({wet:%-d %b %Y})", (wet, d.precipitation_mm[wet]), xytext=(-8, -2), textcoords="offset points", ha="right", va="center", fontsize=9.5, color=INK)
+# ---- precipitation + dry spells: one small panel per year (same scale), so years can be compared
+years = sorted(d.index.year.unique()); ymax = np.ceil(d.precipitation_mm.max() / 10) * 10
+fig, axes = plt.subplots(len(years), 1, figsize=(12, 9.6), sharey=True); fig.subplots_adjust(left=.105, right=.975, top=.885, bottom=.07, hspace=.28)
+for ax, yr in zip(axes, years):
+    dy = d[d.index.year == yr]; ax.set_facecolor(SURF)
+    for s_, e_, n_ in spells:
+        if s_.year == yr:
+            ax.axvspan(s_ - pd.Timedelta(hours=12), e_ + pd.Timedelta(hours=12), color=SPELL, alpha=.85, lw=0, zorder=0)
+            ax.text(s_ + (e_ - s_) / 2, ymax * .97, f"{n_}", ha="center", va="top", fontsize=8.5, color=INK, zorder=3)
+    ax.bar(dy.index, dy.precipitation_mm, width=1.0, color=RAIN, lw=0, zorder=2, edgecolor="none")
+    ax.set_xlim(pd.Timestamp(f"{yr}-01-01"), pd.Timestamp(f"{yr}-12-31")); ax.set_ylim(0, ymax); ax.set_yticks([0, 20, 40])
+    for sp_ in ("top", "right", "left"): ax.spines[sp_].set_visible(False)
+    ax.spines["bottom"].set_color(GRID); ax.tick_params(colors=INK2, length=0, labelsize=9); ax.grid(axis="y", color=GRID, lw=.7); ax.set_axisbelow(True)
+    ax.xaxis.set_major_locator(mdates.MonthLocator()); ax.xaxis.set_major_formatter(mdates.DateFormatter("%b" if ax is axes[-1] else ""))
+    tot = dy.precipitation_mm.sum(); season = dy[dy.index.month.isin(range(SEASON[0], SEASON[1] + 1))].precipitation_mm.sum()
+    ax.text(-.04, .5, str(yr), transform=ax.transAxes, ha="right", va="center", fontsize=12, fontweight="bold", color=INK)
+    ax.text(1.0, .97, f"year {tot:.0f} mm · Apr–Oct {season:.0f} mm", transform=ax.transAxes, ha="right", va="top", fontsize=8.5, color=INK2)
+wet = d.precipitation_mm.idxmax(); aw = axes[years.index(wet.year)]
+aw.annotate(f"wettest day: {d.precipitation_mm[wet]:.0f} mm ({wet:%-d %b %Y})", (wet, d.precipitation_mm[wet]), xytext=(-8, -2), textcoords="offset points", ha="right", va="center", fontsize=8.5, color=INK)
+fig.set_facecolor(SURF)
+fig.text(.105, .955, "Sokuluk cropland: daily precipitation by year", fontsize=16, fontweight="bold", color=INK, ha="left")
+fig.text(.105, .925, f"Precipitation in mm per day, ERA5-Land, cropland-weighted · {span} · grey = dry spell (≥ {MIN_DAYS} days under {DRY_MM:g} mm, Apr–Oct; number = days)", fontsize=9.6, color=INK2, ha="left")
 fig.savefig("reports/figures/sokuluk_precipitation.png", dpi=200); plt.close(fig)
 print("saved reports/figures/sokuluk_temperature.png, sokuluk_precipitation.png")
