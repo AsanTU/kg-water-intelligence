@@ -201,3 +201,35 @@ Processing (`scripts/ndvi_map.py`, `scripts/plot_ndvi.py`): read B04, B08 and th
 
 ### Next
 Day 4: combine the cropland mask, weather and NDVI into one consistent geospatial dataset (same grid, same dates).
+
+
+---
+
+## Day 4 — First structured dataset (weather + NDVI + cropland on one grid)
+
+**Output:** `data/processed/sokuluk_grid_daily.csv.gz` — **76,680 rows = 2,556 days (2 Jan 2018 – 31 Dec 2024) × 30 grid cells.** Cell table (centres, cropland area): `data/processed/grid_cells.csv`. Full audit, validation table and coverage summary: [`reports/data_audit.md`](reports/data_audit.md). Built by `scripts/ndvi_by_cell.py` (NDVI per cell, resumable) and `scripts/build_dataset.py`. Source files are never modified.
+
+**The grid:** the three inputs use different grids — cropland mask EPSG:4326 (~8 m), NDVI EPSG:32643 (10 m map, 80 m series), weather 0.1° lat/lon (~9 km). Everything is put on the **weather grid** (ERA5-Land cells, 30 of them hold cropland, 855 km²): each pixel goes to the cell whose centre is nearest. Cell weather is the Day 2 processing done per cell (not district-averaged).
+
+| Column | Meaning |
+|---|---|
+| `date`, `cell_id`, `latitude`, `longitude` | local day (UTC+6) and cell centre |
+| `cropland_km2` | cropland in the cell (weights) |
+| `temperature_2m_c` (+ `_min_c`, `_max_c`), `precipitation_mm` | daily weather |
+| `soil_moisture_l1_m3m3`, `_l2_m3m3` | ERA5-Land soil water, 0–7 cm and 7–28 cm |
+| `ndvi`, `ndvi_valid_frac`, `ndvi_n_pixels`, `ndvi_n_scenes` | mean NDVI of clear cropland pixels in the cell **on days with a satellite observation**, otherwise empty |
+
+**Validation (all pass):** no duplicate (date, cell) rows · no date gaps · no missing weather · values in physical ranges · cropland-weighted cell weather reproduces the Day 2 district series (max difference 0.006) · cell NDVI reproduces the Day 3 district series on all 121 dates (difference 0.0000) · cropland area per cell agrees between the 4326 mask and the 80 m UTM grid (ratio 0.97) · NDVI exists only where a clear observation exists.
+
+![Coverage](reports/figures/data_coverage.png)
+
+**Coverage and missing values**
+- Weather: complete (0 missing of 460,080 values).
+- **NDVI: 2,087 rows (2.7 %)**. It exists only for Apr 2023 – Dec 2024 (11 % of cell-days in that window, 132 days with at least one observed cell, ~53 % of cells on an observation day), with **no data in Dec–Feb** (snow, cloud). The eastern and tile-overlap cells are observed more often (up to ~10 days a month) than central cells (2–5). 5 cells (0.1 km²) never get NDVI.
+- NDVI is **never interpolated or filled in**. Soil moisture is model data; soil properties (SoilGrids) are not added yet.
+- Correction: Day 2 mentioned 36 cells; 6 of them held only trace cropland (< 0.01 km²) and are dropped here (area unchanged).
+
+**What this means for the 3–7-day goal:** weather and NDVI are now aligned by date and cell, but NDVI days are sparse, so Day 5 must decide how to use them (e.g. "latest observation + its age", or train only on observation days). Only ~2 growing seasons have NDVI — extending Sentinel-2 back to 2018 would add training seasons. Cells are ~9 km, so this is a regional, not field-level, dataset, and there is still **no water-stress label** or ground truth.
+
+### Next
+Day 5: explore relationships between weather, precipitation and vegetation and set a baseline analysis before any model; define a measurable water-stress indicator.
