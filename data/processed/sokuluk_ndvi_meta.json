@@ -1,0 +1,31 @@
+{
+ "items": [
+  "S2B_43TDH_20240527_1_L2A",
+  "S2B_43TDG_20240527_0_L2A"
+ ],
+ "date": "2024-05-27",
+ "scene_cloud_percent": [
+  2.3,
+  0.3
+ ],
+ "tile": [
+  "MGRS-43TDG",
+  "MGRS-43TDH"
+ ],
+ "cropland_pixels": 8556909,
+ "valid_pixels": 8551280,
+ "valid_share_of_cropland": 0.9993,
+ "valid_area_km2": 855.1,
+ "ndvi_mean": 0.6514,
+ "ndvi_median": 0.7143,
+ "ndvi_p10": 0.2803,
+ "ndvi_p90": 0.9077,
+ "ndvi_min": -0.9529,
+ "ndvi_max": 0.9996,
+ "crs": "EPSG:32643",
+ "resolution_m": 10.0,
+ "shape": [
+  9135,
+  3668
+ ]
+}

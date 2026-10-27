@@ -11,3 +11,6 @@ scripts/vidlib.py
 scripts/make_music*.py
 scripts/timeline*.py
 docs/video_*.md
+
+# Large regenerable raster (python3 scripts/ndvi_map.py)
+data/processed/sokuluk_ndvi.tif

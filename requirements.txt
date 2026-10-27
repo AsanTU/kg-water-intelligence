@@ -6,3 +6,4 @@ matplotlib
 rasterio
 geopandas
 numpy
+pystac-client

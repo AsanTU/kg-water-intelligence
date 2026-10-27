@@ -161,3 +161,43 @@ Collect ERA5-Land weather and soil-water data and SoilGrids soil properties for 
 
 ### Next
 Day 3: Sentinel-2 vegetation (NDVI) over the cropland mask (`scripts/ndvi_sentinel2.py`, in progress). Later: align weather, vegetation and cropland in space and time, then define a defensible water-stress indicator before any model.
+
+
+---
+
+## Day 3 — Satellite vegetation (NDVI) over the cropland
+
+**What NDVI is:** NDVI = (NIR − Red) / (NIR + Red) = (B08 − B04) / (B08 + B04) from Sentinel-2 surface reflectance. Healthy leaves absorb red light and reflect near-infrared, so higher NDVI = greener, denser vegetation (≈ 0.2–0.5 sparse/young crops, 0.5–0.9 dense healthy crops, ≈ 0 bare or harvested soil, < 0 water/cloud/snow). **It measures greenness, not water stress.**
+
+**Source:** Sentinel-2 L2A (ESA / Copernicus), Cloud-Optimized GeoTIFFs on AWS via the open Earth Search STAC catalogue (no account needed). Tiles 43TDG + 43TDH cover Sokuluk.
+
+### 1. One clear peak-season map → `data/processed/sokuluk_ndvi.tif`
+*(39 MB, so it is **not stored in git**: regenerate it with `python3 scripts/ndvi_map.py`, about 5 minutes; `sokuluk_ndvi_meta.json` next to it is committed.)*
+| | |
+|---|---|
+| Image date | **27 May 2024** (scenes `S2B_43TDH_20240527_1`, `S2B_43TDG_20240527_0`; scene cloud 0.3 % and 2.3 %) |
+| Why this date | highest greenness of the 2023–2024 series (mean NDVI 0.65) and 100 % of the cropland clear |
+| Grid | EPSG:32643 (UTM 43N), 10 m, 3,668 × 9,135 px, float32, nodata −9999 |
+| Result | 855 km² of cropland, mean NDVI **0.65**, median 0.71, 10th–90th percentile 0.28–0.91 |
+
+![NDVI map](reports/figures/sokuluk_ndvi_map.png)
+
+Processing (`scripts/ndvi_map.py`, `scripts/plot_ndvi.py`): read B04, B08 and the scene-classification layer (SCL) for both tiles → reflectance = (DN + offset)/10000 → NDVI → keep only SCL "vegetation"/"bare soil" pixels, with cloud, shadow, cirrus and snow classes dilated by 2 px → keep only cropland pixels (Day 1 WorldCover mask, resampled to the grid by nearest neighbour). The mask file declares `nodata = 0`, which silently breaks resampling, so it is read as a plain array.
+
+### 2. NDVI time series → `data/processed/sokuluk_ndvi_daily.csv`
+`scripts/ndvi_sentinel2.py` processes 287 Sentinel-2 scenes (< 40 % cloud, Apr 2023 – Dec 2024) at 80 m (COG overview level) and gives one mean NDVI of clear cropland pixels per date: **121 dates** (68 with ≥ 30 % of the cropland clear). The 10 m map and the 80 m series agree (0.651 vs 0.654 on 27 May 2024).
+
+![NDVI time series](reports/figures/sokuluk_ndvi_timeseries.png)
+
+- Clear seasonal cycle: ≈ 0.25 in autumn/winter, rising in spring. **Peak 0.65 on 27 May 2024; the 2023 peak was only 0.49** (3 May 2023). Summer (Jun–Aug) mean NDVI: **0.39 in 2023 vs 0.48 in 2024.**
+- That matches the weather (Day 2): 2023 was drier and hotter (Apr–Oct 290 mm vs 467 mm of modelled rain; 18 vs 7 days ≥ 35 °C). It is a **hint, not proof**: crop mix, sowing dates, irrigation and cloud masking also change NDVI.
+- **No clear data from December to mid-March** (snow and cloud), shown as a gap, not interpolated.
+
+### Limitations
+- NDVI is greenness. A pale field can be ripe wheat or a harvested field, not a stressed one; a green field can still lack water. Water stress needs a time series, weather, and a validation method.
+- Mixed pixels at field edges; cloud-mask errors; snow in winter. The 80 m series blurs small fields; the 10 m map is a single date.
+- The NDVI raster is in UTM (10 m) while the Day 1 mask is in EPSG:4326; Day 4 puts everything on one grid.
+- Sentinel-2 scenes are fetched over a slow connection (~100 KB/s per request), so the code reads many strips in parallel and caches results (`data/raw/sentinel2_ndvi_scenes.jsonl`, not in git).
+
+### Next
+Day 4: combine the cropland mask, weather and NDVI into one consistent geospatial dataset (same grid, same dates).
