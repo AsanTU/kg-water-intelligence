@@ -233,3 +233,38 @@ Day 4: combine the cropland mask, weather and NDVI into one consistent geospatia
 
 ### Next
 Day 5: explore relationships between weather, precipitation and vegetation and set a baseline analysis before any model; define a measurable water-stress indicator.
+
+
+---
+
+## Day 5 — Exploratory analysis: how does weather relate to NDVI?
+
+**Notebook:** [`notebooks/05_exploratory_analysis.ipynb`](notebooks/05_exploratory_analysis.ipynb) (fully executed). Figures: `reports/figures/eda_*.png`. This is *exploratory*; nothing here proves water stress.
+
+**Data check (Day 4 dataset):** 76,680 records × 15 columns · 2018-01-02 – 2024-12-31 · 30 cells · 0 duplicate (date, cell) rows · weather 0 % missing and in physical ranges · **NDVI present on 2.7 % of rows (10.9 % inside the Apr 2023 – Dec 2024 window)**, 2023: 1,068 and 2024: 1,019 rows.
+
+| | |
+|---|---|
+| ![Temperature](reports/figures/eda_temperature.png) | ![Precipitation](reports/figures/eda_precipitation.png) |
+| ![NDVI distribution](reports/figures/eda_ndvi_distribution.png) | ![NDVI over time](reports/figures/eda_ndvi_timeseries.png) |
+
+Distributions: daily temperature −21 to 31 °C (district mean), cropland rain 0–41 mm/day (annual Apr–Oct totals 253–467 mm), 10 m NDVI on 27 May 2024 has median 0.71 (10th–90th percentile 0.28–0.91).
+
+**How relationships were tested** (three ways, each controlling more): pooled correlation (confounded by the season) → same-day comparison across cells (removes the season, keeps the spatial pattern) → year-over-year change inside each cell (removes season *and* place).
+
+![2023 vs 2024](reports/figures/eda_2023_vs_2024.png)
+
+### Three observations
+1. **2024 was greener than 2023 in every month Apr–Oct** (district NDVI +0.01 to +0.16, largest in May–June), in a year with far more spring rain (Apr–May ≈ 249 mm vs 108 mm in the model) and fewer hot days. Consistent with moisture mattering, but June's gap is not explained by rain and there are only two years.
+2. **Pooled weather–NDVI correlations are weak (|ρ| ≤ 0.22) and mostly seasonal.** Across cells on the same day, wetter/cooler cells are greener (median ρ ≈ +0.3 rain, −0.4 temperature), but cells differ by ~8 °C and 3× in rain (plain vs foothills), so that is a fixed spatial pattern, not a weather effect.
+3. **With season and place removed, no consistent relationship remains**: cell-level 2024-minus-2023 change in NDVI vs change in rain ρ = +0.14, vs temperature −0.05, with signs flipping between months. Of the 5 dry spells in the NDVI window only 3 have clear observations before and after, and the NDVI change across them (+0.02, −0.10, +0.02) lies inside the normal 16-day range (−0.09 to +0.09).
+
+### Two data limitations
+1. **NDVI is short and sparse:** ~2 growing seasons, 2.7 % of rows, nothing from Dec to mid-March, so "lower than normal" cannot be defined (no multi-year baseline).
+2. **The resolution hides what matters:** 9 km weather cells, unknown irrigation/crop type/sowing dates, ERA5 rain that looks too high, and NDVI that also falls when crops ripen — a weather effect cannot be separated from land type or management.
+
+### One question to investigate next
+Does NDVI fall below its **own seasonal norm** after hot, dry periods once crop phenology is accounted for? That needs a multi-year NDVI baseline (Sentinel-2 back to 2018) and, ideally, a second stress indicator that does not rely on NDVI (soil-moisture or evaporation deficit).
+
+### Next
+Day 6: define a measurable water-stress indicator and check what can serve as a reliable target for model training.
