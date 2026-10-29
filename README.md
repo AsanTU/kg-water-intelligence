@@ -268,3 +268,29 @@ Does NDVI fall below its **own seasonal norm** after hot, dry periods once crop 
 
 ### Next
 Day 6: define a measurable water-stress indicator and check what can serve as a reliable target for model training.
+
+
+---
+
+## Day 6 — Defining the water-stress target
+
+**Definition:** [`docs/water_stress_target.md`](docs/water_stress_target.md) · **Analysis:** [`notebooks/06_water_stress_target.ipynb`](notebooks/06_water_stress_target.ipynb) · anomaly values: `data/processed/soil_moisture_anomaly_loyo.csv.gz` · figures `reports/figures/target_*.png`.
+
+**Provisional target:** the **soil-moisture anomaly** — ERA5-Land root-zone soil water (7–28 cm now, 28–100 cm planned) as a z-score against the normal for the same cell and time of year (leave-one-year-out baseline), growing season Apr–Oct. *Dry day* = z ≤ −1, *dry event* = ≥ 7 such days, and the forecast label for a later model = "mean z over days t+3 … t+7 ≤ −1". It is an indicator of agricultural drought conditions, **not** proof that a field needs irrigation, and a field is never called stressed from low NDVI alone.
+
+![Seasonal cycle](reports/figures/target_seasonal_cycle.png)
+![Time series and anomaly](reports/figures/target_timeseries.png)
+
+**What the data shows**
+- Soil moisture has a strong seasonal cycle (0.40 m³/m³ in March, 0.21 in July–August), so only an anomaly for the date is meaningful.
+- The anomaly flags **2021 and 2023 as dry and 2024 as wet** (mean growing-season z −0.50, −0.41, +0.80), matching the Day 2 rain totals; 6 dry events in 7 years; the forecast label is positive on **13.2 %** of growing-season cell-days.
+- **A trivial persistence rule already reaches AUC 0.93**, so any model must beat that.
+- It follows recent rain (ρ = +0.53) and moves with NDVI between 2023 and 2024 at district level (r = +0.73, 7 months) — but the cell-level link (pooled ρ = +0.59) **vanishes within a month** (median ρ = −0.11), so it has not been shown to explain differences between cells.
+
+![Yearly](reports/figures/target_yearly.png)
+![NDVI check](reports/figures/target_vs_ndvi.png)
+
+**Main limitations:** the target is produced by a model driven by the same rain and temperature we would use as predictors (**not independent**); ~9 km cells and no field-level truth; irrigation is invisible; the 7–28 cm layer is shallow; short 7-year baseline. The document lists the **independent observations** needed to validate it (satellite soil moisture, evapotranspiration, a multi-year NDVI baseline, station and agronomic records) and the rules for using it in modelling.
+
+### Next
+Day 7: a reproducible data pipeline that builds weather, soil-moisture anomaly and satellite features in one run. Before that: download ERA5-Land layer 3 and extend Sentinel-2 NDVI back to 2018.
