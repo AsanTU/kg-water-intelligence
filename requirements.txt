@@ -7,3 +7,4 @@ rasterio
 geopandas
 numpy
 pystac-client
+pyarrow

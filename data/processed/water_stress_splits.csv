@@ -1,0 +1,8 @@
+year,split,rows,positive_cell_days,positive_rate_pct,positive_episodes,days_with_>=10%_cells_positive,adequate
+2018,train,6420,137,2.13,4,19,False
+2019,train,6420,693,10.79,5,65,True
+2020,train,6420,511,7.96,5,47,True
+2021,train,6420,1135,17.68,8,113,True
+2022,train,6420,431,6.71,6,48,True
+2023,val,6420,1523,23.72,3,115,True
+2024,test,6420,114,1.78,1,17,False

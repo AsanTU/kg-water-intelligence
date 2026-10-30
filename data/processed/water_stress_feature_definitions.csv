@@ -1,0 +1,16 @@
+feature(s),group,definition,observation window,source
+"latitude, longitude, cropland_km2",static,cell centre and cropland area,constant,Day 4 grid
+"doy_sin, doy_cos",calendar,sin/cos of day of year of t,date t,calendar
+sm_l2_t,soil,ERA5-Land volumetric soil water 7-28 cm on day t (m3/m3),day t,ERA5-Land swvl2
+"z_l1_t, z_l2_t",soil,"anomaly z of layers 0-7 / 7-28 cm on day t, vs the TRAINING-YEARS normal for that cell and day of year",day t,ERA5-Land + normals 2018-2022
+"z_l2_mean3, z_l2_mean7",soil,mean of z_l2 over days t-2..t and t-6..t,days t-6..t,ERA5-Land + normals
+z_l2_delta3,soil,z_l2 on day t minus z_l2 on day t-3,"days t-3, t",ERA5-Land + normals
+temp_mean_7d,weather,mean 2 m air temperature over days t-6..t (degC),days t-6..t,ERA5-Land
+temp_max_7d,weather,maximum of the daily maximum temperature over days t-6..t (degC),days t-6..t,ERA5-Land
+"precip_sum_7d, precip_sum_14d",weather,total precipitation over days t-6..t and t-13..t (mm),days t-13..t,ERA5-Land
+days_since_rain,weather,"days since the last day with >= 1 mm precipitation, capped at 60",days <= t,ERA5-Land
+ndvi_last,vegetation,latest NDVI of the cell acquired >= 2 days before t and <= 21 days old; empty if none (never filled),obs date <= t-2,Sentinel-2 (Apr 2023+ only)
+"ndvi_age_days, ndvi_obs_date, ndvi_valid_frac_last",vegetation,"age of that observation, its acquisition date, and the clear share of the cell's cropland",obs date <= t-2,Sentinel-2
+z_l2_future_mean_t3_t7,TARGET (continuous),mean z_l2 over days t+3..t+7,days t+3..t+7,ERA5-Land + normals
+label_dry_t3_t7,TARGET (binary),1 if z_l2_future_mean_t3_t7 <= -1.0,days t+3..t+7,derived
+"label_window_start, label_window_end, split, year",bookkeeping,dates of the label window; split = train 2018-22 / val 2023 / test 2024,-,-

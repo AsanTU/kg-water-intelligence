@@ -1,0 +1,86 @@
+{
+ "rows_before_filters": 76680,
+ "excluded_outside_growing_season": 31740,
+ "excluded_missing_history_or_label": 0,
+ "excluded_dates_examples": [],
+ "rows": 44940,
+ "positive_rate_pct": 10.11,
+ "missing_values": {
+  "ndvi_obs_date": 34508,
+  "ndvi_last": 34508,
+  "ndvi_valid_frac_last": 34508,
+  "ndvi_age_days": 34508
+ },
+ "splits": [
+  {
+   "year": 2018,
+   "split": "train",
+   "rows": 6420,
+   "positive_cell_days": 137,
+   "positive_rate_pct": 2.13,
+   "positive_episodes": 4,
+   "days_with_>=10%_cells_positive": 19,
+   "adequate": false
+  },
+  {
+   "year": 2019,
+   "split": "train",
+   "rows": 6420,
+   "positive_cell_days": 693,
+   "positive_rate_pct": 10.79,
+   "positive_episodes": 5,
+   "days_with_>=10%_cells_positive": 65,
+   "adequate": true
+  },
+  {
+   "year": 2020,
+   "split": "train",
+   "rows": 6420,
+   "positive_cell_days": 511,
+   "positive_rate_pct": 7.96,
+   "positive_episodes": 5,
+   "days_with_>=10%_cells_positive": 47,
+   "adequate": true
+  },
+  {
+   "year": 2021,
+   "split": "train",
+   "rows": 6420,
+   "positive_cell_days": 1135,
+   "positive_rate_pct": 17.68,
+   "positive_episodes": 8,
+   "days_with_>=10%_cells_positive": 113,
+   "adequate": true
+  },
+  {
+   "year": 2022,
+   "split": "train",
+   "rows": 6420,
+   "positive_cell_days": 431,
+   "positive_rate_pct": 6.71,
+   "positive_episodes": 6,
+   "days_with_>=10%_cells_positive": 48,
+   "adequate": true
+  },
+  {
+   "year": 2023,
+   "split": "val",
+   "rows": 6420,
+   "positive_cell_days": 1523,
+   "positive_rate_pct": 23.72,
+   "positive_episodes": 3,
+   "days_with_>=10%_cells_positive": 115,
+   "adequate": true
+  },
+  {
+   "year": 2024,
+   "split": "test",
+   "rows": 6420,
+   "positive_cell_days": 114,
+   "positive_rate_pct": 1.78,
+   "positive_episodes": 1,
+   "days_with_>=10%_cells_positive": 17,
+   "adequate": false
+  }
+ ]
+}

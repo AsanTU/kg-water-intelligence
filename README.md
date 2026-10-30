@@ -292,5 +292,19 @@ Day 6: define a measurable water-stress indicator and check what can serve as a 
 
 **Main limitations:** the target is produced by a model driven by the same rain and temperature we would use as predictors (**not independent**); ~9 km cells and no field-level truth; irrigation is invisible; the 7–28 cm layer is shallow; short 7-year baseline. The document lists the **independent observations** needed to validate it (satellite soil moisture, evapotranspiration, a multi-year NDVI baseline, station and agronomic records) and the rules for using it in modelling.
 
+## Day 7 — Leakage-safe feature dataset and evaluation protocol
+
+**Goal:** a reproducible dataset for forecasting "unusually dry soil 3–7 days ahead", with a chronological evaluation fixed *before* modelling.
+
+- **Run:** `python3 scripts/build_features.py` → `data/processed/water_stress_features.parquet` (44,940 rows = 30 cells × 214 April–October dates × 7 years, 28 columns), `water_stress_feature_definitions.csv` (observation window of every feature), `water_stress_splits.csv`, `soil_moisture_normal_train2018_2022.csv`, `reports/feature_dataset_quality.json`. Audit: [`notebooks/07_feature_dataset.ipynb`](notebooks/07_feature_dataset.ipynb). Protocol: [`docs/evaluation_protocol.md`](docs/evaluation_protocol.md).
+- **Day 6 is reproducible** (max difference 0.0005) — **but it leaked:** its leave-one-year-out normal uses future years. The anomaly is now computed from the training years 2018–2022 only; the pooled persistence AUC drops from 0.927 to **0.912**.
+- **Six automated leakage tests pass** (truncating all data after t changes no feature; changing 2023/2024 soil moisture changes no training row; NDVI is 2–21 days old and never from the future; label window is t+3…t+7; splits are chronological; persistence uses only today's anomaly).
+- **Splits:** train 2018–2022, validation 2023, test 2024. Rule fixed in advance: ≥ 200 positive cell-days and ≥ 3 independent episodes. **2023 passes; 2024 does not** (114 positives, 1 episode), so 2024 is descriptive only and the split was not changed.
+- **Persistence baseline (to beat on Day 8):** validation 2023 AUC **0.939** (0.89–0.97), F1 0.79; 2024 AUC 0.961 but not reliable.
+- **Gaps:** NDVI exists only from April 2023, so it is missing for all training rows and must not be a first-model feature; the target is still model-made (see Day 6).
+
+![Split label rates](reports/figures/features_split_label_rates.png)
+![Persistence AUC](reports/figures/features_persistence_auc.png)
+
 ### Next
-Day 7: a reproducible data pipeline that builds weather, soil-moisture anomaly and satellite features in one run. Before that: download ERA5-Land layer 3 and extend Sentinel-2 NDVI back to 2018.
+Day 8: train a simple baseline model on weather and soil-moisture history (no NDVI) and test whether it beats persistence on 2023. Open: ERA5-Land layer 3 and Sentinel-2 NDVI back to 2018.
